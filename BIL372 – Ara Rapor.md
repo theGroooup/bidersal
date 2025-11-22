@@ -46,12 +46,17 @@ Ayrıca, proje geliştirme sürecinin ilerleyen aşamalarında yeni fonksiyonel 
 ## **2.2) ogretmen (ogretmen\_id PK)**
 
 * ad, soyad  
+* dogum\_tarihi (DATE)
+* cinsiyet (VARCHAR)
 * tel\_no (UNIQUE)  
 * email (UNIQUE)  
 * sifre\_hash  
 * universite, bolum  
 * meslek  
 * dogrulandi\_mi (Boolean: True/False)  
+* biyografi TEXT  
+* puan DECIMAL(3, 2) DEFAULT 0  
+* belge\_url TEXT  
 * hesap\_durumu {aktif, askida}
 
 
@@ -69,6 +74,7 @@ Ayrıca, proje geliştirme sürecinin ilerleyen aşamalarında yeni fonksiyonel 
 * ders\_adi  
 * kategori (Matematik, Fizik, Müzik vb.)  
 * seviye (İlkokul, Lise, Üniversite vb.)
+* aktif\_mi (Boolean: True/False)
 
 
 ## **2.5) ogretmenin\_verdigi\_dersler (ogretmen\_ders\_id PK)**
@@ -76,6 +82,7 @@ Ayrıca, proje geliştirme sürecinin ilerleyen aşamalarında yeni fonksiyonel 
 * ogretmen\_id (FK → ogretmen.ogretmen\_id)  
 * ders\_id (FK → ders.ders\_id)  
 * saatlik\_ucret
+* aktif\_mi (Boolean: True/False)
 
 Constraint: UNIQUE (ogretmen\_id, ders\_id)
 
