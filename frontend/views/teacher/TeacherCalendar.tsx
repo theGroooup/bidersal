@@ -2,21 +2,21 @@
 import React, { useState, useEffect } from 'react';
 import { fetchTeacherAppointments, fetchTeacherAvailability, updateTeacherAvailability } from '../../services/api';
 import { Appointment } from '../../types';
-import { format, startOfISOWeek, addDays, isSameDay } from 'date-fns';
+import { format, startOfISOWeek, addDays, isSameDay, addWeeks } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { Clock, Save } from 'lucide-react';
+import { Clock, Save, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const TeacherCalendar: React.FC<{ teacherId: number }> = ({ teacherId }) => {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [availability, setAvailability] = useState<any[]>([]);
-    const [currentDate] = useState(new Date());
-    
+    const [currentDate, setCurrentDate] = useState(new Date());
+
     // Edit Availability State
     const [editDay, setEditDay] = useState(1);
     const [editStart, setEditStart] = useState('09:00');
     const [editEnd, setEditEnd] = useState('17:00');
 
-    useEffect(() => { 
+    useEffect(() => {
         fetchTeacherAppointments(teacherId).then(setAppointments);
         loadAvailability();
     }, [teacherId]);
@@ -33,12 +33,20 @@ const TeacherCalendar: React.FC<{ teacherId: number }> = ({ teacherId }) => {
     const days = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
     const hours = Array.from({ length: 13 }).map((_, i) => i + 9); // 09:00 - 21:00
 
-    const getDayName = (i: number) => ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'][i-1];
+    const getDayName = (i: number) => ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'][i - 1];
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold">Takvim & Müsaitlik</h2>
+                <div className="flex items-center space-x-2 bg-white p-1 rounded-lg border border-gray-200">
+                    <button onClick={() => setCurrentDate(addWeeks(currentDate, -1))} className="p-2 hover:bg-gray-100 rounded-md text-gray-600"><ChevronLeft size={20} /></button>
+                    <span className="font-medium text-gray-700 px-2 min-w-[140px] text-center">
+                        {format(weekStart, 'd MMM', { locale: tr })} - {format(addDays(weekStart, 6), 'd MMM yyyy', { locale: tr })}
+                    </span>
+                    <button onClick={() => setCurrentDate(addWeeks(currentDate, 1))} className="p-2 hover:bg-gray-100 rounded-md text-gray-600"><ChevronRight size={20} /></button>
+                    <button onClick={() => setCurrentDate(new Date())} className="ml-2 px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-md hover:bg-indigo-100 font-medium">Bugün</button>
+                </div>
             </div>
 
             {/* Availability Settings */}
@@ -46,7 +54,7 @@ const TeacherCalendar: React.FC<{ teacherId: number }> = ({ teacherId }) => {
                 <div>
                     <label className="block text-xs font-bold text-gray-500 mb-1">Gün</label>
                     <select value={editDay} onChange={e => setEditDay(Number(e.target.value))} className="border rounded p-2 text-sm">
-                        {[1,2,3,4,5,6,7].map(d => <option key={d} value={d}>{getDayName(d)}</option>)}
+                        {[1, 2, 3, 4, 5, 6, 7].map(d => <option key={d} value={d}>{getDayName(d)}</option>)}
                     </select>
                 </div>
                 <div>
@@ -58,14 +66,14 @@ const TeacherCalendar: React.FC<{ teacherId: number }> = ({ teacherId }) => {
                     <input type="time" value={editEnd} onChange={e => setEditEnd(e.target.value)} className="border rounded p-2 text-sm" />
                 </div>
                 <button onClick={handleSaveAvailability} className="bg-indigo-600 text-white px-4 py-2 rounded text-sm flex items-center hover:bg-indigo-700">
-                    <Save size={16} className="mr-2"/> Kaydet
+                    <Save size={16} className="mr-2" /> Kaydet
                 </button>
             </div>
 
             <div className="flex gap-2 flex-wrap mb-4">
                 {availability.map(a => (
                     <div key={a.calisma_saati_id} className="bg-green-50 text-green-800 text-xs px-3 py-1 rounded-full border border-green-200">
-                        {getDayName(a.gun_no)}: {a.baslangic_saati.slice(0,5)} - {a.bitis_saati.slice(0,5)}
+                        {getDayName(a.gun_no)}: {a.baslangic_saati.slice(0, 5)} - {a.bitis_saati.slice(0, 5)}
                     </div>
                 ))}
             </div>
@@ -74,7 +82,7 @@ const TeacherCalendar: React.FC<{ teacherId: number }> = ({ teacherId }) => {
                 <div className="min-w-[600px]">
                     <div className="grid grid-cols-8 bg-gray-50 border-b">
                         <div className="p-4 text-center font-bold text-gray-500">Saat</div>
-                        {days.map((d, i) => <div key={i} className="p-4 text-center font-bold text-gray-700">{format(d, 'EEE')} <br/> {format(d, 'd')}</div>)}
+                        {days.map((d, i) => <div key={i} className={`p-4 text-center font-bold ${isSameDay(d, new Date()) ? 'text-indigo-600 bg-indigo-50' : 'text-gray-700'}`}>{format(d, 'EEE', { locale: tr })} <br /> {format(d, 'd')}</div>)}
                     </div>
                     {hours.map(h => (
                         <div key={h} className="grid grid-cols-8 border-b h-16">
@@ -82,11 +90,11 @@ const TeacherCalendar: React.FC<{ teacherId: number }> = ({ teacherId }) => {
                             {days.map((d, i) => {
                                 const apt = appointments.find(a => isSameDay(new Date(a.date), d) && new Date(a.date).getHours() === h && a.status === 'Planlandı');
                                 // Check availability
-                                const dayAvail = availability.find(av => av.gun_no === (i+1));
+                                const dayAvail = availability.find(av => av.gun_no === (i + 1));
                                 const isAvailable = dayAvail && h >= parseInt(dayAvail.baslangic_saati) && h < parseInt(dayAvail.bitis_saati);
 
                                 return (
-                                    <div key={i} className={`border-r p-1 ${!isAvailable ? 'bg-gray-50' : ''}`}>
+                                    <div key={i} className={`border-r p-1 ${!isAvailable ? 'bg-gray-50' : ''} ${isSameDay(d, new Date()) ? 'bg-indigo-50/30' : ''}`}>
                                         {apt && <div className="bg-indigo-100 text-indigo-800 text-xs p-1 rounded h-full overflow-hidden">{apt.studentName}</div>}
                                     </div>
                                 )

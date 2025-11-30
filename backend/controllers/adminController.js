@@ -5,7 +5,8 @@ exports.getFinancialRecords = async (req, res) => {
         const query = `
             SELECT r.randevu_id as id, r.randevu_tarihi_baslangic as date, r.durum as status,
             CONCAT(s.ad, ' ', s.soyad) as "studentName", CONCAT(t.ad, ' ', t.soyad) as "teacherName",
-            o.tutar as amount, o.ogrenci_odeme_durumu as "studentPaymentStatus", o.ogretmen_odeme_durumu as "teacherPaymentStatus"
+            o.tutar as amount, o.ogrenci_odeme_durumu as "studentPaymentStatus", o.ogretmen_odeme_durumu as "teacherPaymentStatus",
+            o.tarih as "paymentDate", o.ogrenci_odeme_tarihi as "studentPaymentDate", o.ogretmen_odeme_tarihi as "teacherPaymentDate"
             FROM randevu r
             JOIN ogrenci s ON r.ogrenci_id = s.ogrenci_id
             JOIN ogretmen_ders od ON r.ogretmen_ders_id = od.ogretmen_ders_id
@@ -24,7 +25,7 @@ exports.resolveFinancialRecord = async (req, res) => {
         if (action === 'refund') {
             await db.query('UPDATE odeme SET ogrenci_odeme_durumu = \'İade Edildi\' WHERE randevu_id = $1', [req.params.id]);
         } else if (action === 'pay_teacher') {
-            await db.query('UPDATE odeme SET ogretmen_odeme_durumu = \'Ödendi\' WHERE randevu_id = $1', [req.params.id]);
+            await db.query('UPDATE odeme SET ogretmen_odeme_durumu = \'Ödendi\', ogretmen_odeme_tarihi = NOW() WHERE randevu_id = $1', [req.params.id]);
         }
         res.json({ success: true });
     } catch (err) { res.status(500).json({ error: err.message }); }

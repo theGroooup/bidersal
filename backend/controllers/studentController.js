@@ -36,15 +36,33 @@ exports.updateProfile = async (req, res) => {
 
 exports.getOfferings = async (req, res) => {
     try {
-        const result = await db.query(`
+        const { search, category } = req.query;
+        console.log('Search Params:', { search, category }); // Debug log
+        let query = `
             SELECT od.ogretmen_ders_id as id, d.ders_adi as "subjectName", 
             o.ad as "teacherName", o.soyad as "teacherSurname", od.saatlik_ucret as "hourlyRate",
-            o.ogretmen_id as "teacherId"
+            o.ogretmen_id as "teacherId", d.kategori as category, o.universite, o.puan as rating
             FROM ogretmen_ders od
             JOIN ogretmen o ON od.ogretmen_id = o.ogretmen_id
             JOIN ders d ON od.ders_id = d.ders_id
             WHERE od.aktif_mi = TRUE
-        `);
+        `;
+        const params = [];
+        let paramIndex = 1;
+
+        if (search) {
+            query += ` AND (o.ad ILIKE $${paramIndex} OR o.soyad ILIKE $${paramIndex} OR d.ders_adi ILIKE $${paramIndex})`;
+            params.push(`%${search}%`);
+            paramIndex++;
+        }
+
+        if (category && category !== 'Tümü') {
+            query += ` AND d.kategori = $${paramIndex}`;
+            params.push(category);
+            paramIndex++;
+        }
+
+        const result = await db.query(query, params);
         res.json(result.rows);
     } catch (err) {
         res.status(500).json({ error: err.message });

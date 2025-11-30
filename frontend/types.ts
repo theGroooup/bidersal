@@ -106,6 +106,7 @@ export interface Payment {
     status: PaymentStatus;
     date: string;
     subjectName: string;
+    paymentDate?: string;
 }
 
 // Navigation Types
@@ -132,7 +133,7 @@ export enum View {
     ADMIN_APPROVALS = 'ADMIN_APPROVALS',
     ADMIN_LESSONS = 'ADMIN_LESSONS',
     ADMIN_REPORTS = 'ADMIN_REPORTS',
-    ADMIN_DISPUTES = 'ADMIN_DISPUTES'
+    ADMIN_FINANCIAL_MANAGEMENT = 'ADMIN_FINANCIAL_MANAGEMENT'
 }
 
 export interface Teacher extends User {

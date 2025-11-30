@@ -51,7 +51,8 @@ const TeacherProfile: React.FC<{ teacher: Teacher }> = ({ teacher }) => {
         const data = new FormData();
         data.append('document', file);
 
-        const res = await fetch(`http://localhost:3001/api/teacher/${teacher.id}/upload-document`, {
+        const API_BASE_URL = 'http://localhost:3001'; // Should be in a config file in real app
+        const res = await fetch(`${API_BASE_URL}/api/teacher/${teacher.id}/upload-document`, {
             method: 'POST',
             body: data
         });

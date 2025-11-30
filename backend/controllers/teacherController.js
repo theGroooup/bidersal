@@ -103,6 +103,11 @@ exports.getLessons = async (req, res) => {
 exports.addLesson = async (req, res) => {
     const { teacherId, subjectId, hourlyRate } = req.body; // Note: server.js used hourlyRate, frontend likely sends hourlyRate
     try {
+        const teacher = await db.query('SELECT dogrulandi_mi FROM ogretmen WHERE ogretmen_id = $1', [teacherId]);
+        if (teacher.rows.length === 0) return res.status(404).json({ error: 'Öğretmen bulunamadı' });
+        if (!teacher.rows[0].dogrulandi_mi) {
+            return res.status(403).json({ error: 'Ders oluşturmak için yönetici onayı gereklidir.' });
+        }
         const check = await db.query('SELECT * FROM ogretmen_ders WHERE ogretmen_id = $1 AND ders_id = $2', [teacherId, subjectId]);
         if (check.rows.length > 0) {
             await db.query('UPDATE ogretmen_ders SET saatlik_ucret = $1, aktif_mi = TRUE WHERE ogretmen_ders_id = $2', [hourlyRate, check.rows[0].ogretmen_ders_id]);

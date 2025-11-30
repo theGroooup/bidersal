@@ -1,10 +1,6 @@
 const db = require('../config/db');
 
 exports.getStudentAppointments = async (req, res) => {
-    // Ensure column exists (Migration logic)
-    try {
-        await db.query('ALTER TABLE degerlendirme ADD COLUMN IF NOT EXISTS randevu_id INTEGER');
-    } catch (e) { console.log('Schema check:', e.message); }
 
     const query = `
         SELECT r.randevu_id as id, r.randevu_tarihi_baslangic as date, r.sure_dakika as "durationMinutes",
@@ -49,15 +45,59 @@ exports.getTeacherAppointments = async (req, res) => {
 exports.createAppointment = async (req, res) => {
     const { studentId, offeringId, date } = req.body;
     try {
-        const priceRes = await db.query('SELECT saatlik_ucret, aktif_mi FROM ogretmen_ders WHERE ogretmen_ders_id = $1', [offeringId]);
+        const priceRes = await db.query('SELECT saatlik_ucret, aktif_mi, ogretmen_id FROM ogretmen_ders WHERE ogretmen_ders_id = $1', [offeringId]);
         if (priceRes.rows.length === 0 || !priceRes.rows[0].aktif_mi) {
             return res.status(400).json({ error: 'Bu ders artık aktif değil.' });
         }
         const price = priceRes.rows[0].saatlik_ucret;
+        const teacherId = priceRes.rows[0].ogretmen_id; // Need to fetch teacherId too
+
+        // 1. Check Teacher Availability (Working Hours)
+        const appointmentDate = new Date(date);
+        const dayOfWeek = appointmentDate.getDay() || 7; // JS: 0=Sun, 1=Mon... DB: 1=Mon...7=Sun (usually)
+        // Let's assume DB uses 1=Mon, 7=Sun. JS getDay() returns 0 for Sun.
+        // So if getDay() is 0, we use 7. Else use getDay().
+
+        const timeString = appointmentDate.toTimeString().split(' ')[0].substring(0, 5); // "HH:MM"
+
+        const workHours = await db.query(
+            'SELECT * FROM ogretmen_calisma_saatleri WHERE ogretmen_id = $1 AND gun_no = $2',
+            [teacherId, dayOfWeek]
+        );
+
+        if (workHours.rows.length === 0) {
+            return res.status(400).json({ error: 'Öğretmen bu gün çalışmıyor.' });
+        }
+
+        const { baslangic_saati, bitis_saati } = workHours.rows[0];
+        if (timeString < baslangic_saati || timeString >= bitis_saati) {
+            return res.status(400).json({ error: 'Seçilen saat öğretmenin çalışma saatleri dışında.' });
+        }
+
+        // 2. Check for Conflicts (Overlapping Appointments)
+        // Assuming 1 hour duration for now, or we should get duration from somewhere.
+        // The report says "sure_dakika". Let's assume default 60 mins if not specified.
+        const duration = 60;
+
+        const conflict = await db.query(`
+            SELECT * FROM randevu r
+            JOIN ogretmen_ders od ON r.ogretmen_ders_id = od.ogretmen_ders_id
+            WHERE od.ogretmen_id = $1
+            AND r.durum NOT IN ('Öğrenci İptal', 'Öğretmen İptal')
+            AND (
+                (r.randevu_tarihi_baslangic <= $2 AND r.randevu_tarihi_baslangic + (r.sure_dakika || ' minutes')::interval > $2)
+                OR
+                (r.randevu_tarihi_baslangic < $3 AND r.randevu_tarihi_baslangic + (r.sure_dakika || ' minutes')::interval >= $3)
+            )
+        `, [teacherId, date, new Date(appointmentDate.getTime() + duration * 60000).toISOString()]);
+
+        if (conflict.rows.length > 0) {
+            return res.status(400).json({ error: 'Bu saatte öğretmenin başka bir randevusu var.' });
+        }
 
         const randevuRes = await db.query(
-            'INSERT INTO randevu (ogrenci_id, ogretmen_ders_id, randevu_tarihi_baslangic) VALUES ($1, $2, $3) RETURNING randevu_id',
-            [studentId, offeringId, date]
+            'INSERT INTO randevu (ogrenci_id, ogretmen_ders_id, randevu_tarihi_baslangic, sure_dakika) VALUES ($1, $2, $3, $4) RETURNING randevu_id',
+            [studentId, offeringId, date, duration]
         );
         const randevuId = randevuRes.rows[0].randevu_id;
 
@@ -82,9 +122,6 @@ exports.updateStatus = async (req, res) => {
 exports.addReview = async (req, res) => {
     const { teacherId, studentId, rating, comment, appointmentId } = req.body;
     try {
-        try {
-            await db.query('ALTER TABLE degerlendirme ADD COLUMN IF NOT EXISTS randevu_id INTEGER');
-        } catch (e) { console.log('Column might already exist or error:', e.message); }
 
         const check = await db.query('SELECT * FROM degerlendirme WHERE randevu_id = $1', [appointmentId]);
         if (check.rows.length > 0) {
