@@ -22,7 +22,7 @@ import AdminUsers from './views/admin/AdminUsers';
 import AdminApprovals from './views/admin/AdminApprovals';
 import AdminLessons from './views/admin/AdminLessons';
 import AdminReports from './views/admin/AdminReports';
-import AdminDisputes from './views/admin/AdminDisputes';
+import AdminFinancialManagement from './views/admin/AdminFinancialManagement';
 
 const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -95,8 +95,8 @@ const App: React.FC = () => {
                 return <AdminLessons />;
             case View.ADMIN_REPORTS:
                 return <AdminReports />;
-            case View.ADMIN_DISPUTES:
-                return <AdminDisputes />;
+            case View.ADMIN_FINANCIAL_MANAGEMENT:
+                return <AdminFinancialManagement />;
 
             default:
                 return <div>Sayfa bulunamadı</div>;

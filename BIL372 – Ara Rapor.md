@@ -105,6 +105,7 @@ Constraint: UNIQUE (ogretmen\_id, ders\_id)
 * ogrenci\_odeme\_tarihi  
 * ogretmen\_odeme\_durumu {odendi, bekleniyor}  
 * ogretmen\_odeme\_tarihi
+* is_withdrawed (Boolean: True/False)
 
 
 ## **2.8) degerlendirme (degerlendirme\_id PK)**

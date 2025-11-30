@@ -1,26 +1,38 @@
-
 import React, { useState, useEffect } from 'react';
 import { TeacherOffering } from '../../types';
-import { fetchOfferings, createAppointment } from '../../services/api';
+import { fetchOfferings, fetchSubjects } from '../../services/api';
+
 import { Search, Filter, Star, Clock, CheckCircle } from 'lucide-react';
+import AppointmentModal from './AppointmentModal';
 
 const StudentDashboard: React.FC<{ studentId: number, onAppointmentCreated: () => void }> = ({ studentId, onAppointmentCreated }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('Tümü');
     const [offerings, setOfferings] = useState<TeacherOffering[]>([]);
     const [bookingSuccess, setBookingSuccess] = useState(false);
+    const [selectedOffering, setSelectedOffering] = useState<TeacherOffering | null>(null);
+    const [categories, setCategories] = useState<string[]>(['Tümü']);
 
-    useEffect(() => { fetchOfferings().then(setOfferings); }, []);
+    useEffect(() => {
+        fetchSubjects().then((subjects: any[]) => {
+            const uniqueCategories = Array.from(new Set(subjects.map((s: any) => s.category)));
+            setCategories(['Tümü', ...uniqueCategories]);
+        });
+    }, []);
 
-    const categories = ['Tümü', ...Array.from(new Set(offerings.map(o => o.category)))];
+    useEffect(() => {
+        fetchOfferings().then(setOfferings);
+    }, []);
+
+    // Client-side filtering
     const filteredOfferings = offerings.filter(o => {
         const matchesSearch = o.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) || o.subjectName.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = selectedCategory === 'Tümü' || o.category === selectedCategory;
         return matchesSearch && matchesCategory;
     });
 
-    const handleBook = async (offering: TeacherOffering) => {
-        await createAppointment({ studentId, offeringId: offering.id, date: new Date(Date.now() + 86400000 * 2).toISOString() });
+    const handleSuccess = () => {
+        setSelectedOffering(null);
         setBookingSuccess(true);
         setTimeout(() => { setBookingSuccess(false); onAppointmentCreated(); }, 2000);
     };
@@ -57,13 +69,22 @@ const StudentDashboard: React.FC<{ studentId: number, onAppointmentCreated: () =
                             </div>
                             <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
                                 <div className="text-indigo-600 font-bold text-lg">{offering.hourlyRate} ₺</div>
-                                <button onClick={() => handleBook(offering)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium flex items-center"><Clock size={16} className="mr-2" /> Randevu Al</button>
+                                <button onClick={() => setSelectedOffering(offering)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium flex items-center"><Clock size={16} className="mr-2" /> Randevu Al</button>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
             {bookingSuccess && <div className="fixed bottom-8 right-8 bg-green-600 text-white px-6 py-4 rounded-lg shadow-lg flex items-center animate-bounce"><CheckCircle className="mr-3" /><div><h4 className="font-bold">Başarılı!</h4><p className="text-sm">Randevu talebiniz iletildi.</p></div></div>}
+
+            {selectedOffering && (
+                <AppointmentModal
+                    offering={selectedOffering}
+                    studentId={studentId}
+                    onClose={() => setSelectedOffering(null)}
+                    onSuccess={handleSuccess}
+                />
+            )}
         </div>
     );
 };

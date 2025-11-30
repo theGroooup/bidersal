@@ -123,10 +123,10 @@ const Layout: React.FC<LayoutProps> = ({ currentUser, currentView, onChangeView,
                             label="Raporlar"
                         />
                         <NavItem
-                            active={currentView === View.ADMIN_DISPUTES}
-                            onClick={() => onChangeView(View.ADMIN_DISPUTES)}
+                            active={currentView === View.ADMIN_FINANCIAL_MANAGEMENT}
+                            onClick={() => onChangeView(View.ADMIN_FINANCIAL_MANAGEMENT)}
                             icon={<CreditCard size={20} />}
-                            label="Anlaşmazlıklar"
+                            label="Finansal Yönetim"
                         />
                     </>
                 );
@@ -187,8 +187,8 @@ const NavItem = ({ active, onClick, icon, label }: { active: boolean; onClick: (
     <button
         onClick={onClick}
         className={`flex items-center space-x-3 w-full px-3 py-2.5 rounded-md transition-all ${active
-                ? 'bg-indigo-50 text-indigo-700 font-medium'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+            ? 'bg-indigo-50 text-indigo-700 font-medium'
+            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
             }`}
     >
         {icon}

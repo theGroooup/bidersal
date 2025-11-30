@@ -8,7 +8,7 @@ import { format } from 'date-fns';
 const StudentAppointments: React.FC<{ studentId: number }> = ({ studentId }) => {
     const [appointments, setAppointments] = useState<Appointment[]>([]);
     const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
-    const [reviewModal, setReviewModal] = useState<{open: boolean, aptId: number | null, teacherId: number | null}>({open: false, aptId: null, teacherId: null});
+    const [reviewModal, setReviewModal] = useState<{ open: boolean, aptId: number | null, teacherId: number | null }>({ open: false, aptId: null, teacherId: null });
     const [rating, setRating] = useState(5);
     const [comment, setComment] = useState('');
 
@@ -16,28 +16,34 @@ const StudentAppointments: React.FC<{ studentId: number }> = ({ studentId }) => 
     useEffect(() => { load(); }, [studentId]);
 
     const handleCancel = async (id: number) => {
-        if(confirm('Randevuyu iptal etmek istediğinize emin misiniz?')) {
+        if (confirm('Randevuyu iptal etmek istediğinize emin misiniz?')) {
             await updateAppointmentStatus(id, AppointmentStatus.CANCELLED_STUDENT);
             load();
         }
     };
 
     const openReview = (apt: any) => {
-        setReviewModal({open: true, aptId: apt.id, teacherId: apt.teacherId});
+        setReviewModal({ open: true, aptId: apt.id, teacherId: apt.teacherId });
         setRating(5);
         setComment('');
     }
 
     const submitReview = async () => {
-        if(!reviewModal.teacherId) return;
-        await addReview({
-            teacherId: reviewModal.teacherId,
-            studentId,
-            rating,
-            comment
-        });
-        setReviewModal({open: false, aptId: null, teacherId: null});
-        alert('Değerlendirme gönderildi!');
+        if (!reviewModal.teacherId || !reviewModal.aptId) return;
+        try {
+            await addReview({
+                teacherId: reviewModal.teacherId,
+                studentId,
+                rating,
+                comment,
+                appointmentId: reviewModal.aptId
+            });
+            setReviewModal({ open: false, aptId: null, teacherId: null });
+            alert('Değerlendirme gönderildi!');
+            load(); // Reload to update status
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Bir hata oluştu');
+        }
     }
 
     const upcoming = appointments.filter(a => ['Planlandı', 'Onay Bekliyor'].includes(a.status));
@@ -64,9 +70,18 @@ const StudentAppointments: React.FC<{ studentId: number }> = ({ studentId }) => 
                                 <button onClick={() => handleCancel(apt.id)} className="px-3 py-1 border border-red-200 text-red-600 rounded hover:bg-red-50 text-sm">İptal</button>
                             )}
                             {apt.status === 'Tamamlandı' && (
-                                <button onClick={() => openReview(apt)} className="px-3 py-1 bg-yellow-50 text-yellow-600 border border-yellow-200 rounded hover:bg-yellow-100 text-sm flex items-center">
-                                    <Star size={14} className="mr-1"/> Değerlendir
-                                </button>
+                                <>
+                                    {/* @ts-ignore: isReviewed might not be in type definition yet */}
+                                    {apt.isReviewed ? (
+                                        <button disabled className="px-3 py-1 bg-gray-100 text-gray-400 border border-gray-200 rounded text-sm flex items-center cursor-not-allowed">
+                                            <CheckCircle size={14} className="mr-1" /> Değerlendirildi
+                                        </button>
+                                    ) : (
+                                        <button onClick={() => openReview(apt)} className="px-3 py-1 bg-yellow-50 text-yellow-600 border border-yellow-200 rounded hover:bg-yellow-100 text-sm flex items-center">
+                                            <Star size={14} className="mr-1" /> Değerlendir
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
@@ -80,21 +95,21 @@ const StudentAppointments: React.FC<{ studentId: number }> = ({ studentId }) => 
                     <div className="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
                         <h3 className="text-xl font-bold mb-4">Dersi Değerlendir</h3>
                         <div className="flex justify-center space-x-2 mb-4">
-                            {[1,2,3,4,5].map(star => (
+                            {[1, 2, 3, 4, 5].map(star => (
                                 <button key={star} onClick={() => setRating(star)} className={`${star <= rating ? 'text-yellow-500' : 'text-gray-300'}`}>
                                     <Star size={32} fill={star <= rating ? "currentColor" : "none"} />
                                 </button>
                             ))}
                         </div>
-                        <textarea 
-                            className="w-full border p-3 rounded-lg mb-4" 
-                            rows={4} 
+                        <textarea
+                            className="w-full border p-3 rounded-lg mb-4"
+                            rows={4}
                             placeholder="Yorumunuz..."
                             value={comment}
                             onChange={e => setComment(e.target.value)}
                         ></textarea>
                         <div className="flex justify-end space-x-2">
-                            <button onClick={() => setReviewModal({open: false, aptId: null, teacherId: null})} className="px-4 py-2 text-gray-500">İptal</button>
+                            <button onClick={() => setReviewModal({ open: false, aptId: null, teacherId: null })} className="px-4 py-2 text-gray-500">İptal</button>
                             <button onClick={submitReview} className="px-4 py-2 bg-indigo-600 text-white rounded-lg">Gönder</button>
                         </div>
                     </div>

@@ -13,10 +13,33 @@ export const fetchOfferings = async () => (await api.get('/offerings')).data;
 export const fetchSubjects = async () => (await api.get('/subjects')).data;
 export const createAppointment = async (d: any) => (await api.post('/appointments', d)).data;
 export const fetchStudentAppointments = async (id: number) => (await api.get(`/appointments/student/${id}`)).data;
-export const fetchStudentPayments = async (id: number) => (await api.get(`/payments/student/${id}`)).data;
+export const fetchStudentPayments = async (id: number) => {
+    const res = await fetch(`${API_URL}/payments/student/${id}`);
+    return res.json();
+};
+
+export const payPayment = async (paymentId: number) => {
+    const res = await fetch(`${API_URL}/payments/pay`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ paymentId }),
+    });
+    return res.json();
+};
 export const updateStudentProfile = async (id: number, d: any) => (await api.put(`/student/${id}`, d)).data;
 export const fetchStudentProfile = async (id: number) => (await api.get(`/student/${id}`)).data;
-export const addReview = async (d: any) => (await api.post('/reviews', d)).data;
+export const addReview = async (data: { teacherId: number, studentId: number, rating: number, comment: string, appointmentId: number }) => {
+    const res = await fetch(`${API_URL}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    if (!res.ok) {
+        const err = await res.json();
+        throw { response: { data: err } };
+    }
+    return res.json();
+};
 
 // Teacher
 export const fetchTeacherAppointments = async (id: number) => (await api.get(`/appointments/teacher/${id}`)).data;
@@ -28,6 +51,7 @@ export const fetchTeacherPayments = async (id: number) => (await api.get(`/payme
 export const updateTeacherProfile = async (id: number, d: any) => (await api.put(`/teacher/${id}`, d)).data;
 export const fetchTeacherProfile = async (id: number) => (await api.get(`/teacher/${id}`)).data;
 export const fetchTeacherAvailability = async (id: number) => (await api.get(`/teacher/${id}/availability`)).data;
+export const fetchTeacherBusySlots = async (id: number) => (await api.get(`/teacher/${id}/busy-slots`)).data;
 export const updateTeacherAvailability = async (d: any) => (await api.post('/teacher/availability', d)).data;
 
 // Admin
