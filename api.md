@@ -19,6 +19,7 @@
 
 ### `POST /api/register`
 - **Description:** User registration for Students and Teachers.
+- **Content-Type:** `multipart/form-data`
 - **Request Body:**
   - `role` (string): 'STUDENT' or 'TEACHER'.
   - `name` (string): First name.
@@ -26,8 +27,14 @@
   - `email` (string): Email address.
   - `password` (string): Password.
   - `phone` (string): Phone number.
-  - `birthDate` (string, optional): Date of birth (Student only).
-  - `gender` (string, optional): Gender (Student only).
+  - `birthDate` (string, optional): Date of birth .
+  - `gender` (string, optional): Gender.
+  - `grade` (string, optional): Grade (Student only).
+  - `university` (string, optional): University (Teacher only).
+  - `department` (string, optional): Department (Teacher only).
+  - `profession` (string, optional): Profession (Teacher only).
+  - `bio` (string, optional): Biography (Teacher only).
+  - `document` (file, optional): Verification document (Teacher only).
 - **Response:**
   - `userId` (integer): The ID of the newly created user.
 
@@ -58,6 +65,18 @@
   - `category` (string): Subject category.
 
 ## Student
+
+### `GET /api/student/offerings`
+- **Description:** Get all active teacher offerings (Student view).
+- **Request Params:**
+  - `search` (string, optional): Search by subject name.
+  - `category` (string, optional): Filter by category.
+- **Response:** Array of objects:
+  - `id` (integer)
+  - `subjectName` (string)
+  - `teacherName` (string)
+  - `hourlyRate` (number)
+  - `rating` (number)
 
 ### `GET /api/student/:id`
 - **Description:** Get student profile details.
@@ -111,6 +130,17 @@
 - **Response:**
   - `message` (string): "Randevu oluşturuldu"
 
+### `POST /api/appointments/review`
+- **Description:** Submit a review for a completed appointment.
+- **Request Body:**
+  - `teacherId` (integer)
+  - `studentId` (integer)
+  - `rating` (number)
+  - `comment` (string)
+  - `appointmentId` (integer)
+- **Response:**
+  - `success` (boolean): true
+
 ### `POST /api/reviews`
 - **Description:** Submit a review for a teacher.
 - **Request Body:**
@@ -132,7 +162,30 @@
   - `date` (string): Appointment date.
   - `subjectName` (string): Subject name.
 
+### `POST /api/payments/teacher/withdraw`
+- **Description:** Withdraw teacher earnings.
+- **Request Body:**
+  - `paymentId` (integer): Payment ID to withdraw.
+- **Response:**
+  - `success` (boolean): true
+
+### `POST /api/payments/pay`
+- **Description:** Process a payment (Admin/System).
+- **Request Body:**
+  - `paymentId` (integer): Payment ID.
+- **Response:**
+  - `success` (boolean): true
+
 ## Teacher
+
+### `GET /api/teacher/lessons`
+- **Description:** Get all global lessons/subjects available for teachers to select.
+- **Request:** None
+- **Response:** Array of objects:
+  - `id` (integer)
+  - `name` (string)
+  - `category` (string)
+  - `level` (string)
 
 ### `GET /api/teacher/:id`
 - **Description:** Get teacher profile details.
@@ -227,6 +280,14 @@
 - **Response:**
   - `success` (boolean): true
 
+### `GET /api/teacher/:id/busy-slots`
+- **Description:** Get teacher's busy slots (appointments).
+- **Request Params:**
+  - `id` (integer): Teacher ID.
+- **Response:** Array of objects:
+  - `date` (string): Start time.
+  - `duration` (integer): Duration in minutes.
+
 ### `GET /api/teacher/:id/availability`
 - **Description:** Get teacher's availability hours.
 - **Request Params:**
@@ -263,8 +324,8 @@
 
 ## Admin
 
-### `GET /api/admin/disputes`
-- **Description:** Get list of disputed or cancelled appointments.
+### `GET /api/admin/financial-management`
+- **Description:** Get list of financial records (disputed or cancelled appointments).
 - **Request:** None
 - **Response:** Array of objects:
   - `id` (integer)
@@ -275,8 +336,8 @@
   - `amount` (number)
   - `paymentStatus` (string)
 
-### `POST /api/admin/disputes/:id/resolve`
-- **Description:** Resolve a dispute.
+### `POST /api/admin/financial-management/:id/resolve`
+- **Description:** Resolve a financial dispute.
 - **Request Params:**
   - `id` (integer): Appointment ID.
 - **Request Body:**
@@ -297,6 +358,37 @@
   - `joinDate` (string)
   - `birthDate` (string, Teacher only)
   - `gender` (string, Teacher only)
+
+### `PUT /api/admin/users/:id/status`
+- **Description:** Update user account status.
+- **Request Params:**
+  - `id` (integer): User ID.
+- **Request Body:**
+  - `role` (string): 'STUDENT' or 'TEACHER'.
+  - `status` (string): New status.
+- **Response:**
+  - `success` (boolean): true
+
+### `GET /api/admin/teachers/pending`
+- **Description:** Get list of teachers pending verification.
+- **Request:** None
+- **Response:** Array of objects:
+  - `id` (integer)
+  - `name` (string)
+  - `surname` (string)
+  - `university` (string)
+  - `department` (string)
+  - `profession` (string)
+  - `documentUrl` (string)
+
+### `PUT /api/admin/teachers/:id/verify`
+- **Description:** Verify or reject a teacher.
+- **Request Params:**
+  - `id` (integer): Teacher ID.
+- **Request Body:**
+  - `verified` (boolean): true to verify, false to reject.
+- **Response:**
+  - `success` (boolean): true
 
 ### `PUT /api/users/:id/status`
 - **Description:** Update user account status.

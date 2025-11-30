@@ -34,19 +34,24 @@ exports.login = async (req, res) => {
 };
 
 exports.register = async (req, res) => {
-    const { role, name, surname, email, password, phone, birthDate, gender } = req.body;
+    const { role, name, surname, email, password, phone, birthDate, gender, university, department, profession, bio, grade } = req.body;
     try {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
         let query = '';
+        let params = [];
+
         if (role === 'STUDENT') {
-            query = 'INSERT INTO ogrenci (ad, soyad, email, sifre_hash, tel_no, dogum_tarihi, cinsiyet) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ogrenci_id as id';
+            query = 'INSERT INTO ogrenci (ad, soyad, email, sifre_hash, tel_no, dogum_tarihi, cinsiyet, sinif) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ogrenci_id as id';
+            params = [name, surname, email, hashedPassword, phone, birthDate, gender, grade];
         } else {
-            query = 'INSERT INTO ogretmen (ad, soyad, email, sifre_hash, tel_no, dogum_tarihi, cinsiyet) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING ogretmen_id as id';
+            const documentUrl = req.file ? `/uploads/${req.file.filename}` : null;
+            query = 'INSERT INTO ogretmen (ad, soyad, email, sifre_hash, tel_no, dogum_tarihi, cinsiyet, universite, bolum, meslek, biyografi, belge_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING ogretmen_id as id';
+            params = [name, surname, email, hashedPassword, phone, birthDate, gender, university, department, profession, bio, documentUrl];
         }
 
-        const result = await db.query(query, [name, surname, email, hashedPassword, phone, birthDate, gender]);
+        const result = await db.query(query, params);
         res.status(201).json({ userId: result.rows[0].id });
     } catch (err) {
         res.status(500).json({ error: 'Kayıt oluşturulamadı. E-posta kullanımda olabilir.' });

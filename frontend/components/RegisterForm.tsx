@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Role } from '../types';
 import { register } from '../services/api';
@@ -18,13 +17,25 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, onSwitch
         password: '',
         phone: '',
         birthDate: '',
-        gender: ''
+        gender: '',
+        grade: '',
+        university: '',
+        department: '',
+        profession: '',
+        bio: ''
     });
+    const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            setFile(e.target.files[0]);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -33,8 +44,16 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, onSwitch
         setError(null);
 
         try {
-            await register({ ...formData, role });
-            // Show success message briefly or redirect immediately
+            const data = new FormData();
+            data.append('role', role);
+            Object.keys(formData).forEach(key => {
+                data.append(key, (formData as any)[key]);
+            });
+            if (file && role === Role.TEACHER) {
+                data.append('document', file);
+            }
+
+            await register(data);
             alert("Kayıt başarılı! Şimdi giriş yapabilirsiniz.");
             onRegisterSuccess();
         } catch (err: any) {
@@ -185,6 +204,21 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, onSwitch
                             </>
                         )}
 
+                        {role === Role.STUDENT && (
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Sınıf</label>
+                                <input
+                                    type="text"
+                                    name="grade"
+                                    required
+                                    value={(formData as any).grade || ''}
+                                    onChange={handleChange}
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    placeholder="Örn: 10. Sınıf"
+                                />
+                            </div>
+                        )}
+
                         <div className="md:col-span-2">
                             <label className="block text-sm font-medium text-gray-700 mb-1">Şifre</label>
                             <div className="relative">
@@ -200,6 +234,65 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onRegisterSuccess, onSwitch
                             </div>
                             <p className="text-xs text-gray-500 mt-1">En az 6 karakter olmalıdır.</p>
                         </div>
+
+                        {role === Role.TEACHER && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Üniversite</label>
+                                    <input
+                                        type="text"
+                                        name="university"
+                                        required
+                                        value={(formData as any).university || ''}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Bölüm</label>
+                                    <input
+                                        type="text"
+                                        name="department"
+                                        required
+                                        value={(formData as any).department || ''}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Meslek</label>
+                                    <input
+                                        type="text"
+                                        name="profession"
+                                        required
+                                        value={(formData as any).profession || ''}
+                                        onChange={handleChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Biyografi</label>
+                                    <textarea
+                                        name="bio"
+                                        rows={3}
+                                        value={(formData as any).bio || ''}
+                                        onChange={handleChange as any}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Doğrulama Belgesi</label>
+                                    <input
+                                        type="file"
+                                        name="document"
+                                        accept=".pdf,.jpg,.jpeg,.png"
+                                        onChange={handleFileChange}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">Lütfen diplomanızı veya öğrenci belgenizi yükleyiniz.</p>
+                                </div>
+                            </>
+                        )}
 
                         <div className="md:col-span-2 pt-4">
                             <button
