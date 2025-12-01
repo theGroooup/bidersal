@@ -46,8 +46,8 @@ const StudentAppointments: React.FC<{ studentId: number }> = ({ studentId }) => 
         }
     }
 
-    const upcoming = appointments.filter(a => ['Planlandı', 'Onay Bekliyor'].includes(a.status));
-    const past = appointments.filter(a => !['Planlandı', 'Onay Bekliyor'].includes(a.status));
+    const upcoming = appointments.filter(a => [AppointmentStatus.PLANNED, AppointmentStatus.PENDING].includes(a.status));
+    const past = appointments.filter(a => ![AppointmentStatus.PLANNED, AppointmentStatus.PENDING].includes(a.status));
     const displayList = tab === 'upcoming' ? upcoming : past;
 
     return (

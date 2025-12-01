@@ -11,7 +11,7 @@ export enum AppointmentStatus {
     COMPLETED = 'Tamamlandı',
     CANCELLED_STUDENT = 'Öğrenci İptal',
     CANCELLED_TEACHER = 'Öğretmen İptal',
-    PENDING = 'Onay Bekliyor'
+    PENDING = 'Bekliyor'
 }
 
 export enum PaymentStatus {
@@ -51,6 +51,9 @@ export interface Teacher extends User {
     hourlyRate?: number;
     rating: number;
     phone: string;
+    documentUrl?: string;
+    birthDate?: string;
+    gender?: string;
 }
 
 export interface Subject {
@@ -134,18 +137,4 @@ export enum View {
     ADMIN_LESSONS = 'ADMIN_LESSONS',
     ADMIN_REPORTS = 'ADMIN_REPORTS',
     ADMIN_FINANCIAL_MANAGEMENT = 'ADMIN_FINANCIAL_MANAGEMENT'
-}
-
-export interface Teacher extends User {
-    university: string;
-    department: string;
-    profession: string;
-    isVerified: boolean;
-    bio: string;
-    hourlyRate?: number;
-    rating: number;
-    phone: string;
-    documentUrl?: string;
-    birthDate?: string;
-    gender?: string;
 }
