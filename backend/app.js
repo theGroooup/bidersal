@@ -53,6 +53,14 @@ app.get('/api/teachers/pending', adminController.getPendingTeachers);
 app.put('/api/teachers/:id/verify', adminController.verifyTeacher);
 
 // Start Server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+const initializeDatabase = require('./utils/dbInit');
+
+// Start Server
+const startServer = async () => {
+    await initializeDatabase();
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+};
+
+startServer();
