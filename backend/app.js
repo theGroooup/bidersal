@@ -14,8 +14,6 @@ app.use(cors());
 app.use(express.json());
 
 // Uploads Config
-const path = require('path');
-const fs = require('fs');
 const uploadDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir);
