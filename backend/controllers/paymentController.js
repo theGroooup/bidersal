@@ -8,7 +8,7 @@ exports.getStudentPayments = async (req, res) => {
         JOIN randevu r ON o.randevu_id = r.randevu_id
         JOIN ogretmen_ders od ON r.ogretmen_ders_id = od.ogretmen_ders_id
         JOIN ders d ON od.ders_id = d.ders_id
-        WHERE r.ogrenci_id = $1
+        WHERE r.ogrenci_id = $1 AND r.durum != 'Bekliyor'
     `;
     try {
         const result = await db.query(query, [req.params.id]);
@@ -26,7 +26,7 @@ exports.getTeacherPayments = async (req, res) => {
         JOIN randevu r ON o.randevu_id = r.randevu_id
         JOIN ogretmen_ders od ON r.ogretmen_ders_id = od.ogretmen_ders_id
         JOIN ders d ON od.ders_id = d.ders_id
-        WHERE od.ogretmen_id = $1
+        WHERE od.ogretmen_id = $1 AND r.durum != 'Bekliyor'
     `;
     try {
         const result = await db.query(query, [req.params.id]);

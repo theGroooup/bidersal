@@ -10,6 +10,7 @@ import StudentDashboard from './views/student/StudentDashboard';
 import StudentAppointments from './views/student/StudentAppointments';
 import StudentPayments from './views/student/StudentPayments';
 import StudentProfile from './views/student/StudentProfile';
+import StudentTeacherProfile from './views/student/StudentTeacherProfile';
 
 import TeacherDashboard from './views/teacher/TeacherDashboard';
 import TeacherCalendar from './views/teacher/TeacherCalendar';
@@ -27,6 +28,7 @@ import AdminFinancialManagement from './views/admin/AdminFinancialManagement';
 const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [currentView, setCurrentView] = useState<View>(View.LOGIN);
+    const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
 
     // AUTH HANDLERS
     const handleLoginSuccess = (user: User) => {
@@ -41,6 +43,11 @@ const App: React.FC = () => {
     const handleLogout = () => {
         setCurrentUser(null);
         setCurrentView(View.LOGIN);
+    };
+
+    const handleViewTeacherProfile = (teacherId: number) => {
+        setSelectedTeacherId(teacherId);
+        setCurrentView(View.STUDENT_TEACHER_PROFILE);
     };
 
     // ROUTING
@@ -64,13 +71,26 @@ const App: React.FC = () => {
         switch (currentView) {
             // Student Views
             case View.STUDENT_SEARCH:
-                return <StudentDashboard studentId={currentUser.id} onAppointmentCreated={() => setCurrentView(View.STUDENT_APPOINTMENTS)} />;
+                return <StudentDashboard
+                    studentId={currentUser.id}
+                    onAppointmentCreated={() => setCurrentView(View.STUDENT_APPOINTMENTS)}
+                    onViewProfile={handleViewTeacherProfile}
+                />;
             case View.STUDENT_APPOINTMENTS:
                 return <StudentAppointments studentId={currentUser.id} />;
             case View.STUDENT_PAYMENTS:
                 return <StudentPayments studentId={currentUser.id} />;
             case View.STUDENT_PROFILE:
                 return <StudentProfile student={currentUser as any} />;
+            case View.STUDENT_TEACHER_PROFILE:
+                return selectedTeacherId ? (
+                    <StudentTeacherProfile
+                        teacherId={selectedTeacherId}
+                        onBack={() => setCurrentView(View.STUDENT_SEARCH)}
+                    />
+                ) : (
+                    <div>Öğretmen seçilmedi</div>
+                );
 
             // Teacher Views
             case View.TEACHER_DASHBOARD:

@@ -113,6 +113,11 @@ exports.updateStatus = async (req, res) => {
     const { status } = req.body;
     try {
         await db.query('UPDATE randevu SET durum = $1 WHERE randevu_id = $2', [status, req.params.id]);
+
+        if (status === 'Öğrenci İptal' || status === 'Öğretmen İptal') {
+            await db.query('DELETE FROM odeme WHERE randevu_id = $1', [req.params.id]);
+        }
+
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });

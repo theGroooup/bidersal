@@ -5,7 +5,7 @@ import { fetchOfferings, fetchSubjects } from '../../services/api';
 import { Search, Filter, Star, Clock, CheckCircle } from 'lucide-react';
 import AppointmentModal from './AppointmentModal';
 
-const StudentDashboard: React.FC<{ studentId: number, onAppointmentCreated: () => void }> = ({ studentId, onAppointmentCreated }) => {
+const StudentDashboard: React.FC<{ studentId: number, onAppointmentCreated: () => void, onViewProfile: (id: number) => void }> = ({ studentId, onAppointmentCreated, onViewProfile }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string>('Tümü');
     const [offerings, setOfferings] = useState<TeacherOffering[]>([]);
@@ -62,14 +62,17 @@ const StudentDashboard: React.FC<{ studentId: number, onAppointmentCreated: () =
                             <div className="flex justify-between mb-4">
                                 <div>
                                     <span className="px-2 py-1 text-xs font-semibold bg-blue-50 text-blue-600 rounded mb-2 inline-block">{offering.subjectName}</span>
-                                    <h3 className="text-lg font-bold">{offering.teacherName} {offering.teacherSurname}</h3>
+                                    <h3 className="text-lg font-bold cursor-pointer hover:text-indigo-600" onClick={() => onViewProfile(offering.teacherId)}>{offering.teacherName} {offering.teacherSurname}</h3>
                                     <p className="text-sm text-gray-500">{offering.university}</p>
                                 </div>
                                 <div className="flex items-center bg-yellow-50 px-2 py-1 rounded text-yellow-700 h-fit"><Star size={14} className="fill-current mr-1" />{offering.rating || 0}</div>
                             </div>
                             <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
                                 <div className="text-indigo-600 font-bold text-lg">{offering.hourlyRate} ₺</div>
-                                <button onClick={() => setSelectedOffering(offering)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium flex items-center"><Clock size={16} className="mr-2" /> Randevu Al</button>
+                                <div className="flex gap-2">
+                                    <button onClick={() => onViewProfile(offering.teacherId)} className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200">Profili Gör</button>
+                                    <button onClick={() => setSelectedOffering(offering)} className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium flex items-center"><Clock size={16} className="mr-2" /> Randevu Al</button>
+                                </div>
                             </div>
                         </div>
                     </div>
